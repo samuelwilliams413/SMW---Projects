@@ -1,0 +1,16 @@
+Deliverables
+Wrist wearble device that is multifuctional
+-time
+-date
+-alarms
+-stopwatch
+-countdown
+-reminder
+-notes
+-DICE
+
+
+Inclusions
+
+
+Exclusions
