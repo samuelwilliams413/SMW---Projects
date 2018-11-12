@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import glob
+import cv2.aruco as aruco
 
 check_x = 7
 check_y = 9
@@ -44,16 +45,43 @@ cv2.destroyAllWindows()
 
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
 
-fname = 'Calibration/CH03.jpg'
-img = cv2.imread(fname)
-h,  w = img.shape[:2]
-newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
-# undistort
-dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
 
-# crop the image
-x,y,w,h = roi
-dst = dst[y:y+h, x:x+w]
-cv2.imwrite('calibresult.png',dst)
-cv2.imshow(fname,dst)
-cv2.waitKey(5000)
+fname = 'Cluttered/ARUCO_001.jpg'
+frame = cv2.imread(fname)
+
+cv2.imshow(fname,frame)
+
+# operations on the frame come here
+gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)
+parameters = aruco.DetectorParameters_create()
+
+#lists of ids and the corners beloning to each id
+corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
+
+font = cv2.FONT_HERSHEY_SIMPLEX #font for displaying text (below)
+
+if np.all(ids != None):
+    rvec, tvec,_ = aruco.estimatePoseSingleMarkers(corners[0], 0.05, mtx, dist) #Estimate pose of each marker and return the values rvet and tvec---different from camera coefficients
+    #(rvec-tvec).any() # get rid of that nasty numpy value array error
+
+
+    aruco.drawAxis(frame, mtx, dist, rvec[0], tvec[0], 0.1) #Draw Axis
+    aruco.drawDetectedMarkers(frame, corners) #Draw A square around the markers
+
+
+    ###### DRAW ID #####
+    cv2.putText(frame, "Id: " + str(ids), (0,64), font, 1, (0,255,0),2,cv2.LINE_AA)
+
+
+# Display the resulting frame
+cv2.destroyAllWindows()
+cv2.imshow(fname,frame)
+
+fname = str("FOUND_" + str(ids) + ".jpg")
+print(fname)
+cv2.imwrite(fname, frame)
+cv2.waitKey(20000)
+
+
+cv2.destroyAllWindows()
